@@ -1,0 +1,36 @@
+body {
+    padding: 20px;
+}
+
+.folder-icon {
+    font-size: 2rem;
+    color: #ffc107;
+}
+
+.file-icon {
+    font-size: 2rem;
+    color: #6c757d;
+}
+
+.container {
+    max-width: 800px;
+}
+
+.explorer {
+    margin-top: 20px;
+}
+
+.item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.item span {
+    margin-left: 10px;
+    font-size: 1.25rem;
+}
+
+.back-link {
+    margin-bottom: 20px;
+}
