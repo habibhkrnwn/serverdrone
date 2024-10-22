@@ -63,7 +63,7 @@
             <!-- Main content -->
             <section class="content">
                 <div class="container-fluid">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
                         <!-- Breadcrumb -->
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb">
@@ -90,7 +90,7 @@
                         </nav>
 
                         <!-- Upload file -->
-                        <form action="" method="POST" enctype="multipart/form-data" class="mr-3">
+                        <form action="" method="POST" enctype="multipart/form-data" class="mr-3 mb-3">
                             <div class="input-group">
                                 <input type="file" name="uploadedFiles[]" class="form-control" multiple required>
                                 <button class="btn btn-success" type="submit" name="uploadFiles">Upload Files</button>
@@ -98,7 +98,7 @@
                         </form>
 
                         <!-- Create new folder -->
-                        <form method="POST">
+                        <form method="POST" class="mb-3">
                             <div class="input-group">
                                 <input type="text" name="folderName" class="form-control" placeholder="Enter new folder name" required>
                                 <button class="btn btn-primary" type="submit">Create Folder</button>
@@ -106,130 +106,71 @@
                         </form>
                     </div>
 
-                    <!-- Folder and file display in table -->
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Nama</th>
-                                <th>Aksi</th>
-                                <th>Ukuran</th>
-                                <th>Terakhir Diubah</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            // Handle folder creation
-                            if (isset($_POST['folderName'])) {
-                                $newFolderName = trim($_POST['folderName']);
-                                $newFolderPath = $currentDir . '/' . $newFolderName;
-
-                                if (!file_exists($newFolderPath)) {
-                                    mkdir($newFolderPath, 0777, true);
-                                    echo "<div class='alert alert-success'>Folder <strong>$newFolderName</strong> berhasil dibuat.</div>";
+                    <!-- Folder and file display in responsive table -->
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Nama</th>
+                                    <th>Aksi</th>
+                                    <th>Ukuran</th>
+                                    <th>Terakhir Diubah</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                // Folder and file listing
+                                $files = scandir($currentDir);  // scandir digunakan untuk membaca isi dari direktori
+                                if ($files === false) {
+                                    echo "<tr><td colspan='4'>Tidak bisa membaca isi folder.</td></tr>";
                                 } else {
-                                    echo "<div class='alert alert-danger'>Folder <strong>$newFolderName</strong> sudah ada.</div>";
-                                }
-                            }
+                                    foreach ($files as $file) {
+                                        if ($file != '.' && $file != '..') {  // Mengabaikan direktori . dan ..
+                                            $filePath = $currentDir . '/' . $file;
+                                            $fileSize = is_dir($filePath) ? '--' : filesize($filePath) . ' bytes';  // Cek apakah folder atau file
+                                            $fileModTime = date("F d Y H:i:s", filemtime($filePath));  // Mengambil waktu modifikasi terakhir
 
-                            // Handle file upload
-                            if (isset($_POST['uploadFiles'])) {
-                                $uploadDir = $currentDir . '/';
-                                foreach ($_FILES['uploadedFiles']['name'] as $key => $name) {
-                                    $tmpName = $_FILES['uploadedFiles']['tmp_name'][$key];
-                                    $uploadFilePath = $uploadDir . basename($name);
-                                    
-                                    if (move_uploaded_file($tmpName, $uploadFilePath)) {
-                                        echo "<div class='alert alert-success'>File <strong>$name</strong> berhasil diupload.</div>";
-                                    } else {
-                                        echo "<div class='alert alert-danger'>Terjadi kesalahan saat mengupload file <strong>$name</strong>.</div>";
+                                            // Jika itu adalah folder
+                                            if (is_dir($filePath)) {
+                                                echo "<tr>
+                                                        <td><i class='fas fa-folder'></i> <a href='?dir=" . htmlspecialchars($filePath) . "'>" . htmlspecialchars($file) . "</a></td>
+                                                        <td>
+                                                            <form method='POST' class='d-inline'>
+                                                                <input type='hidden' name='oldFolderName' value='" . htmlspecialchars($file) . "'>
+                                                                <input type='text' name='newFolderName' placeholder='Rename folder' class='form-control d-inline-block' style='width: 200px;' required>
+                                                                <button class='btn btn-warning' name='renameFolder' type='submit'>Rename</button>
+                                                            </form>
+                                                            <form method='POST' class='d-inline'>
+                                                                <input type='hidden' name='folderToDelete' value='" . htmlspecialchars($file) . "'>
+                                                                <button class='btn btn-danger' name='deleteFolder' type='submit'>Delete</button>
+                                                            </form>
+                                                        </td>
+                                                        <td>$fileSize</td>
+                                                        <td>$fileModTime</td>
+                                                    </tr>";
+                                            } 
+                                            // Jika itu adalah file
+                                            else {
+                                                echo "<tr>
+                                                        <td><i class='fas fa-file'></i> " . htmlspecialchars($file) . "</td>
+                                                        <td>
+                                                            <form method='POST' class='d-inline'>
+                                                                <input type='hidden' name='fileToDelete' value='" . htmlspecialchars($file) . "'>
+                                                                <button class='btn btn-danger' name='deleteFile' type='submit'>Delete</button>
+                                                            </form>
+                                                        </td>
+                                                        <td>$fileSize</td>
+                                                        <td>$fileModTime</td>
+                                                    </tr>";
+                                            }
+                                        }
                                     }
                                 }
-                            }
+                                ?>
 
-                            // Handle rename folder
-                            if (isset($_POST['renameFolder']) && isset($_POST['oldFolderName']) && isset($_POST['newFolderName'])) {
-                                $oldFolderName = $_POST['oldFolderName'];
-                                $newFolderName = $_POST['newFolderName'];
-                                $oldFolderPath = $currentDir . '/' . $oldFolderName;
-                                $newFolderPath = $currentDir . '/' . $newFolderName;
-
-                                if (file_exists($oldFolderPath) && !file_exists($newFolderPath)) {
-                                    rename($oldFolderPath, $newFolderPath);
-                                    echo "<div class='alert alert-success'>Folder <strong>$oldFolderName</strong> berhasil diubah menjadi <strong>$newFolderName</strong>.</div>";
-                                } else {
-                                    echo "<div class='alert alert-danger'>Tidak dapat mengganti nama folder <strong>$oldFolderName</strong>.</div>";
-                                }
-                            }
-
-                            // Handle delete folder
-                            if (isset($_POST['deleteFolder']) && isset($_POST['folderToDelete'])) {
-                                $folderToDelete = $_POST['folderToDelete'];
-                                $folderPath = $currentDir . '/' . $folderToDelete;
-
-                                if (is_dir($folderPath) && count(scandir($folderPath)) == 2) {
-                                    rmdir($folderPath);
-                                    echo "<div class='alert alert-success'>Folder <strong>$folderToDelete</strong> berhasil dihapus.</div>";
-                                } else {
-                                    echo "<div class='alert alert-danger'>Folder <strong>$folderToDelete</strong> tidak dapat dihapus atau tidak kosong.</div>";
-                                }
-                            }
-
-                            // Handle delete file
-                            if (isset($_POST['deleteFile']) && isset($_POST['fileToDelete'])) {
-                                $fileToDelete = $_POST['fileToDelete'];
-                                $filePath = $currentDir . '/' . $fileToDelete;
-
-                                if (file_exists($filePath)) {
-                                    unlink($filePath); // Menghapus file
-                                    echo "<div class='alert alert-success'>File <strong>$fileToDelete</strong> berhasil dihapus.</div>";
-                                } else {
-                                    echo "<div class='alert alert-danger'>File <strong>$fileToDelete</strong> tidak ditemukan.</div>";
-                                }
-                            }
-
-                            // Folder and file listing
-                            $files = scandir($currentDir);
-                            foreach ($files as $file) {
-                                if ($file != '.' && $file != '..') {
-                                    $filePath = $currentDir . '/' . $file;
-                                    $fileSize = is_dir($filePath) ? '--' : filesize($filePath) . ' bytes';
-                                    $fileModTime = date("F d Y H:i:s.", filemtime($filePath));
-
-                                    if (is_dir($filePath)) {
-                                        echo "<tr>
-                                                <td><i class='fas fa-folder'></i> <a href='?dir=$filePath'>" . htmlspecialchars($file) . "</a></td>
-                                                <td>
-                                                    <form method='POST' class='d-inline'>
-                                                        <input type='hidden' name='oldFolderName' value='" . htmlspecialchars($file) . "'>
-                                                        <input type='text' name='newFolderName' placeholder='Rename folder' class='form-control d-inline-block' style='width: 200px;' required>
-                                                        <button class='btn btn-warning' name='renameFolder' type='submit'>Rename</button>
-                                                    </form>
-                                                    <form method='POST' class='d-inline'>
-                                                        <input type='hidden' name='folderToDelete' value='" . htmlspecialchars($file) . "'>
-                                                        <button class='btn btn-danger' name='deleteFolder' type='submit'>Delete</button>
-                                                    </form>
-                                                </td>
-                                                <td>$fileSize</td>
-                                                <td>$fileModTime</td>
-                                            </tr>";
-                                    } else {
-                                        echo "<tr>
-                                                <td><i class='fas fa-file'></i> " . htmlspecialchars($file) . "</td>
-                                                <td>
-                                                    <form method='POST' class='d-inline'>
-                                                        <input type='hidden' name='fileToDelete' value='" . htmlspecialchars($file) . "'>
-                                                        <button class='btn btn-danger' name='deleteFile' type='submit'>Delete</button>
-                                                    </form>
-                                                </td>
-                                                <td>$fileSize</td>
-                                                <td>$fileModTime</td>
-                                            </tr>";
-                                    }
-                                }
-                            }
-                            ?>
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
         </div>
