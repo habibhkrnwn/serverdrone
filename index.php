@@ -119,6 +119,77 @@
                             </thead>
                             <tbody>
                                 <?php
+
+                                // Handle folder creation
+                            if (isset($_POST['folderName'])) {
+                                $newFolderName = trim($_POST['folderName']);
+                                $newFolderPath = $currentDir . '/' . $newFolderName;
+
+                                if (!file_exists($newFolderPath)) {
+                                    mkdir($newFolderPath, 0777, true);
+                                    echo "<div class='alert alert-success'>Folder <strong>$newFolderName</strong> berhasil dibuat.</div>";
+                                } else {
+                                    echo "<div class='alert alert-danger'>Folder <strong>$newFolderName</strong> sudah ada.</div>";
+                                }
+                            }
+
+                            // Handle file upload
+                            if (isset($_POST['uploadFiles'])) {
+                                $uploadDir = $currentDir . '/';
+                                foreach ($_FILES['uploadedFiles']['name'] as $key => $name) {
+                                    $tmpName = $_FILES['uploadedFiles']['tmp_name'][$key];
+                                    $uploadFilePath = $uploadDir . basename($name);
+                                    
+                                    if (move_uploaded_file($tmpName, $uploadFilePath)) {
+                                        echo "<div class='alert alert-success'>File <strong>$name</strong> berhasil diupload.</div>";
+                                    } else {
+                                        echo "<div class='alert alert-danger'>Terjadi kesalahan saat mengupload file <strong>$name</strong>.</div>";
+                                    }
+                                }
+                            }
+
+                            // Handle rename folder
+                            if (isset($_POST['renameFolder']) && isset($_POST['oldFolderName']) && isset($_POST['newFolderName'])) {
+                                $oldFolderName = $_POST['oldFolderName'];
+                                $newFolderName = $_POST['newFolderName'];
+                                $oldFolderPath = $currentDir . '/' . $oldFolderName;
+                                $newFolderPath = $currentDir . '/' . $newFolderName;
+
+                                if (file_exists($oldFolderPath) && !file_exists($newFolderPath)) {
+                                    rename($oldFolderPath, $newFolderPath);
+                                    echo "<div class='alert alert-success'>Folder <strong>$oldFolderName</strong> berhasil diubah menjadi <strong>$newFolderName</strong>.</div>";
+                                } else {
+                                    echo "<div class='alert alert-danger'>Tidak dapat mengganti nama folder <strong>$oldFolderName</strong>.</div>";
+                                }
+                            }
+
+                            // Handle delete folder
+                            if (isset($_POST['deleteFolder']) && isset($_POST['folderToDelete'])) {
+                                $folderToDelete = $_POST['folderToDelete'];
+                                $folderPath = $currentDir . '/' . $folderToDelete;
+
+                                if (is_dir($folderPath) && count(scandir($folderPath)) == 2) {
+                                    rmdir($folderPath);
+                                    echo "<div class='alert alert-success'>Folder <strong>$folderToDelete</strong> berhasil dihapus.</div>";
+                                } else {
+                                    echo "<div class='alert alert-danger'>Folder <strong>$folderToDelete</strong> tidak dapat dihapus atau tidak kosong.</div>";
+                                }
+                            }
+
+                            // Handle delete file
+                            if (isset($_POST['deleteFile']) && isset($_POST['fileToDelete'])) {
+                                $fileToDelete = $_POST['fileToDelete'];
+                                $filePath = $currentDir . '/' . $fileToDelete;
+
+                                if (file_exists($filePath)) {
+                                    unlink($filePath); // Menghapus file
+                                    echo "<div class='alert alert-success'>File <strong>$fileToDelete</strong> berhasil dihapus.</div>";
+                                } else {
+                                    echo "<div class='alert alert-danger'>File <strong>$fileToDelete</strong> tidak ditemukan.</div>";
+                                }
+                            }
+
+                            
                                 // Folder and file listing
                                 $files = scandir($currentDir);  // scandir digunakan untuk membaca isi dari direktori
                                 if ($files === false) {
@@ -167,7 +238,6 @@
                                     }
                                 }
                                 ?>
-
                             </tbody>
                         </table>
                     </div>
