@@ -183,7 +183,7 @@
 
                                 if (file_exists($filePath)) {
                                     unlink($filePath); // Menghapus file
-                                    echo "<div class='alert alert-success'>File <strong>$fileToDelete</strong> berhasil dihapus.</div>";
+                                    echo "<div class='alert alert-danger'>File <strong>$fileToDelete</strong> berhasil dihapus.</div>";
                                 } else {
                                     echo "<div class='alert alert-danger'>File <strong>$fileToDelete</strong> tidak ditemukan.</div>";
                                 }
