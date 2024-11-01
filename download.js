@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Inisialisasi aplikasi Firebase
-const serviceAccount = require('./firebasekey/droneapi-c606a-firebase-adminsdk-5cnz0-1dc50a99e5.json');
+const serviceAccount = require('./firebasekey/droneapi-c606a-firebase-adminsdk-5cnz0-85dd37aeeb.json');
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   storageBucket: 'gs://droneapi-c606a.appspot.com'
