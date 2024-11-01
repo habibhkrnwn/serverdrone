@@ -11,6 +11,27 @@
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/style.css">
+
+    <!-- JavaScript untuk AJAX download -->
+    <script>
+        function downloadData(event) {
+            event.preventDefault(); // Mencegah reload halaman
+            const eventSource = new EventSource('runDownload.php');
+
+            eventSource.onmessage = function(event) {
+                document.getElementById('progress').textContent = event.data;
+                if (event.data.includes("100%")) {
+                    eventSource.close();
+                    alert('Download completed!');
+                }
+            };
+
+            eventSource.onerror = function() {
+                eventSource.close();
+                alert('Error during download.');
+            };
+        }
+    </script>
 </head>
 <body class="hold-transition sidebar-mini">
     <div class="wrapper">
@@ -20,31 +41,71 @@
                 <li class="nav-item">
                     <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
                 </li>
+                <li class="nav-item">
+                    <!-- Tambahkan atribut onclick untuk memanggil downloadData() -->
+                    <a class="nav-link" data-widget="downloadjs" href="#" onclick="downloadData(event)" role="button"><i class="fas fa-download"></i> Download Data</a>
+                </li>                
             </ul>
         </nav>
+        <!-- Progres bar -->
+        <div id="progress" style="padding: 20px; font-size: 16px;">Waiting for download to start...</div>
         <!-- /.navbar -->
 
-        <!-- Main Sidebar Container -->
-        <aside class="main-sidebar sidebar-dark-primary elevation-4">
-            <a href="#" class="brand-link">
-                <span class="brand-text font-weight-light">Server Drone</span>
-            </a>
+  <!-- Main Sidebar Container -->
+  <aside class="main-sidebar sidebar-dark-primary elevation-4">
+    <!-- Brand Logo -->
+    <a href="index3.html" class="brand-link">
+      <img src="adminlte/dist/img/AdminLTELogo.png"  class="brand-image img-circle elevation-3" style="opacity: .8">
+      <span class="brand-text font-weight-light">Server Drone</span>
+    </a>
 
-            <!-- Sidebar -->
-            <div class="sidebar">
-                <nav class="mt-2">
-                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-                        <li class="nav-item">
-                            <a href="?" class="nav-link">
-                                <i class="nav-icon fas fa-home"></i>
-                                <p>Home</p>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
-            <!-- /.sidebar -->
-        </aside>
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <!-- Sidebar Menu -->
+      <nav class="mt-2">
+        <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+          <!-- Add icons to the links using the .nav-icon class
+               with font-awesome or any other icon font library -->
+          <li class="nav-item menu-open">
+            <a href="#" class="nav-link active">
+              <i class="nav-icon fas fa-tachometer-alt"></i>
+              <p>
+                Server
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="index.php" class="nav-link active">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>File Explorer</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="page/stats.php" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Stats</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="page/stitch.php" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Stitching</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="./index3.html" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Crop Image</p>
+                </a>
+              </li>
+            </ul>
+        </ul>
+      </nav>
+      <!-- /.sidebar-menu -->
+    </div>
+    <!-- /.sidebar -->
+  </aside>
 
         <!-- Content Wrapper. Contains page content -->
         <div class="content-wrapper">
@@ -119,77 +180,78 @@
                             </thead>
                             <tbody>
                                 <?php
+                                // Include function to delete folders with content
+                                include 'deleteFolder.php';  // Assume deleteFolder function is in deleteFolder.php
 
                                 // Handle folder creation
-                            if (isset($_POST['folderName'])) {
-                                $newFolderName = trim($_POST['folderName']);
-                                $newFolderPath = $currentDir . '/' . $newFolderName;
+                                if (isset($_POST['folderName'])) {
+                                    $newFolderName = trim($_POST['folderName']);
+                                    $newFolderPath = $currentDir . '/' . $newFolderName;
 
-                                if (!file_exists($newFolderPath)) {
-                                    mkdir($newFolderPath, 0777, true);
-                                    echo "<div class='alert alert-success'>Folder <strong>$newFolderName</strong> berhasil dibuat.</div>";
-                                } else {
-                                    echo "<div class='alert alert-danger'>Folder <strong>$newFolderName</strong> sudah ada.</div>";
-                                }
-                            }
-
-                            // Handle file upload
-                            if (isset($_POST['uploadFiles'])) {
-                                $uploadDir = $currentDir . '/';
-                                foreach ($_FILES['uploadedFiles']['name'] as $key => $name) {
-                                    $tmpName = $_FILES['uploadedFiles']['tmp_name'][$key];
-                                    $uploadFilePath = $uploadDir . basename($name);
-                                    
-                                    if (move_uploaded_file($tmpName, $uploadFilePath)) {
-                                        echo "<div class='alert alert-success'>File <strong>$name</strong> berhasil diupload.</div>";
+                                    if (!file_exists($newFolderPath)) {
+                                        mkdir($newFolderPath, 0777, true);
+                                        echo "<div class='alert alert-success'>Folder <strong>$newFolderName</strong> berhasil dibuat.</div>";
                                     } else {
-                                        echo "<div class='alert alert-danger'>Terjadi kesalahan saat mengupload file <strong>$name</strong>.</div>";
+                                        echo "<div class='alert alert-danger'>Folder <strong>$newFolderName</strong> sudah ada.</div>";
                                     }
                                 }
-                            }
 
-                            // Handle rename folder
-                            if (isset($_POST['renameFolder']) && isset($_POST['oldFolderName']) && isset($_POST['newFolderName'])) {
-                                $oldFolderName = $_POST['oldFolderName'];
-                                $newFolderName = $_POST['newFolderName'];
-                                $oldFolderPath = $currentDir . '/' . $oldFolderName;
-                                $newFolderPath = $currentDir . '/' . $newFolderName;
-
-                                if (file_exists($oldFolderPath) && !file_exists($newFolderPath)) {
-                                    rename($oldFolderPath, $newFolderPath);
-                                    echo "<div class='alert alert-success'>Folder <strong>$oldFolderName</strong> berhasil diubah menjadi <strong>$newFolderName</strong>.</div>";
-                                } else {
-                                    echo "<div class='alert alert-danger'>Tidak dapat mengganti nama folder <strong>$oldFolderName</strong>.</div>";
+                                // Handle file upload
+                                if (isset($_POST['uploadFiles'])) {
+                                    $uploadDir = $currentDir . '/';
+                                    foreach ($_FILES['uploadedFiles']['name'] as $key => $name) {
+                                        $tmpName = $_FILES['uploadedFiles']['tmp_name'][$key];
+                                        $uploadFilePath = $uploadDir . basename($name);
+                                        
+                                        if (move_uploaded_file($tmpName, $uploadFilePath)) {
+                                            echo "<div class='alert alert-success'>File <strong>$name</strong> berhasil diupload.</div>";
+                                        } else {
+                                            echo "<div class='alert alert-danger'>Terjadi kesalahan saat mengupload file <strong>$name</strong>.</div>";
+                                        }
+                                    }
                                 }
-                            }
 
-                            // Handle delete folder
-                            if (isset($_POST['deleteFolder']) && isset($_POST['folderToDelete'])) {
-                                $folderToDelete = $_POST['folderToDelete'];
-                                $folderPath = $currentDir . '/' . $folderToDelete;
+                                // Handle rename folder
+                                if (isset($_POST['renameFolder']) && isset($_POST['oldFolderName']) && isset($_POST['newFolderName'])) {
+                                    $oldFolderName = $_POST['oldFolderName'];
+                                    $newFolderName = $_POST['newFolderName'];
+                                    $oldFolderPath = $currentDir . '/' . $oldFolderName;
+                                    $newFolderPath = $currentDir . '/' . $newFolderName;
 
-                                if (is_dir($folderPath) && count(scandir($folderPath)) == 2) {
-                                    rmdir($folderPath);
-                                    echo "<div class='alert alert-success'>Folder <strong>$folderToDelete</strong> berhasil dihapus.</div>";
-                                } else {
-                                    echo "<div class='alert alert-danger'>Folder <strong>$folderToDelete</strong> tidak dapat dihapus atau tidak kosong.</div>";
+                                    if (file_exists($oldFolderPath) && !file_exists($newFolderPath)) {
+                                        rename($oldFolderPath, $newFolderPath);
+                                        echo "<div class='alert alert-success'>Folder <strong>$oldFolderName</strong> berhasil diubah menjadi <strong>$newFolderName</strong>.</div>";
+                                    } else {
+                                        echo "<div class='alert alert-danger'>Tidak dapat mengganti nama folder <strong>$oldFolderName</strong>.</div>";
+                                    }
                                 }
-                            }
 
-                            // Handle delete file
-                            if (isset($_POST['deleteFile']) && isset($_POST['fileToDelete'])) {
-                                $fileToDelete = $_POST['fileToDelete'];
-                                $filePath = $currentDir . '/' . $fileToDelete;
+                                // Handle delete folder
+                                if (isset($_POST['deleteFolder']) && isset($_POST['folderToDelete'])) {
+                                    $folderToDelete = $_POST['folderToDelete'];
+                                    $folderPath = $currentDir . '/' . $folderToDelete;
 
-                                if (file_exists($filePath)) {
-                                    unlink($filePath); // Menghapus file
-                                    echo "<div class='alert alert-danger'>File <strong>$fileToDelete</strong> berhasil dihapus.</div>";
-                                } else {
-                                    echo "<div class='alert alert-danger'>File <strong>$fileToDelete</strong> tidak ditemukan.</div>";
+                                    if (is_dir($folderPath)) {
+                                        deleteFolder($folderPath);  // Memanggil fungsi deleteFolder
+                                        echo "<div class='alert alert-success'>Folder <strong>$folderToDelete</strong> berhasil dihapus.</div>";
+                                    } else {
+                                        echo "<div class='alert alert-danger'>Folder <strong>$folderToDelete</strong> tidak ditemukan.</div>";
+                                    }
                                 }
-                            }
 
-                            
+                                // Handle delete file
+                                if (isset($_POST['deleteFile']) && isset($_POST['fileToDelete'])) {
+                                    $fileToDelete = $_POST['fileToDelete'];
+                                    $filePath = $currentDir . '/' . $fileToDelete;
+
+                                    if (file_exists($filePath)) {
+                                        unlink($filePath); // Menghapus file
+                                        echo "<div class='alert alert-success'>File <strong>$fileToDelete</strong> berhasil dihapus.</div>";
+                                    } else {
+                                        echo "<div class='alert alert-danger'>File <strong>$fileToDelete</strong> tidak ditemukan.</div>";
+                                    }
+                                }
+
                                 // Folder and file listing
                                 $files = scandir($currentDir);  // scandir digunakan untuk membaca isi dari direktori
                                 if ($files === false) {
