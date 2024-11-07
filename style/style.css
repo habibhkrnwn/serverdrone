@@ -34,3 +34,12 @@ body {
 .back-link {
     margin-bottom: 20px;
 }
+/* Custom styling for progress bar */
+#progressContainer {
+    max-width: 500px;
+    margin: auto;
+}
+
+.progress-bar {
+    background-color: #28a745; /* Warna hijau */
+}

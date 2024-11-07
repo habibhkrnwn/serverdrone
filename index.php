@@ -14,24 +14,41 @@
 
     <!-- JavaScript untuk AJAX download -->
     <script>
-        function downloadData(event) {
-            event.preventDefault(); // Mencegah reload halaman
-            const eventSource = new EventSource('runDownload.php');
-
-            eventSource.onmessage = function(event) {
-                document.getElementById('progress').textContent = event.data;
-                if (event.data.includes("100%")) {
-                    eventSource.close();
-                    alert('Download completed!');
-                }
-            };
-
-            eventSource.onerror = function() {
+    function downloadData(event) {
+        event.preventDefault(); // Mencegah reload halaman
+        const eventSource = new EventSource('runDownload.php');
+        
+        eventSource.onmessage = function(event) {
+            const progressText = document.getElementById('progressText');
+            const progressBar = document.getElementById('progressBar');
+            
+            // Mengambil progres dalam persentase dari data event
+            const progressData = event.data.trim();
+            progressText.textContent = progressData;
+            
+            // Mendapatkan nilai progres dalam persen jika ada
+            const progressMatch = progressData.match(/(\d+(\.\d+)?)%/);
+            if (progressMatch) {
+                const progressPercent = parseFloat(progressMatch[1]);
+                progressBar.style.width = progressPercent + '%';
+                progressBar.setAttribute('aria-valuenow', progressPercent);
+                progressBar.textContent = progressPercent + '%';
+            }
+            
+            // Cek jika sudah mencapai 100%
+            if (progressData.includes("100%")) {
                 eventSource.close();
-                alert('Error during download.');
-            };
-        }
-    </script>
+                alert('Download completed!');
+            }
+        };
+
+        eventSource.onerror = function() {
+            eventSource.close();
+            alert('Error during download.');
+        };
+    }
+</script>
+
 </head>
 <body class="hold-transition sidebar-mini">
     <div class="wrapper">
@@ -48,7 +65,14 @@
             </ul>
         </nav>
         <!-- Progres bar -->
-        <div id="progress" style="padding: 20px; font-size: 16px;">Waiting for download to start...</div>
+        <!-- Progress Bar -->
+<div id="progressContainer" style="padding: 20px;">
+    <div class="progress">
+        <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
+             style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+    </div>
+    <div id="progressText" style="margin-top: 10px; font-size: 16px;">Waiting for download to start...</div>
+</div>
         <!-- /.navbar -->
 
   <!-- Main Sidebar Container -->
