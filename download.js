@@ -4,7 +4,7 @@ const path = require('path');
 const cliProgress = require('cli-progress');
 
 // Inisialisasi aplikasi Firebase
-const serviceAccount = require('./firebasekey/kuncikey.json');
+const serviceAccount = require('./firebasekey/droneapi-c606a-firebase-adminsdk-5cnz0-f61159e282.json');
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   storageBucket: 'gs://droneapi-c606a.appspot.com'
@@ -53,13 +53,14 @@ async function downloadFiles(prefix = '', localDir = 'serverdrone/Output/Drone/'
       ensureDirectoryExistence(localPath);
     }
 
-    const progress = ((i + 1) / files.length * 100).toFixed(2);
-    console.log(`Progress: ${progress}% - Downloaded file: ${file.name} to ${localPath}`);
     progressBar.update(i + 1);
   }
 
   progressBar.stop();
+  console.log('All files have been downloaded successfully.');
 }
 
 // Panggil fungsi utama
-downloadFiles().catch(console.error);
+downloadFiles().catch(error => {
+  console.error("Failed to download files:", error);
+});
