@@ -4,7 +4,7 @@ const path = require('path');
 const cliProgress = require('cli-progress');
 
 // Inisialisasi aplikasi Firebase
-const serviceAccount = require('/home/admin/keyjson/key.json');
+const serviceAccount = require('./firebasekey/kunci.json');
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   storageBucket: 'gs://droneapi-c606a.appspot.com'
